@@ -1,3 +1,27 @@
+-- Copyright 2021 Sammuel Silva. All rights reserved.
+--
+-- This project is dual licensed under GNU General Public License version 3
+-- and a commercial license available on request.
+---------------------------------------------------------------------------
+-- For non commercial use only:
+-- This file is part of TINN.
+-- 
+-- TINN is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+-- 
+-- TINN is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with TINN. If not, see <http://www.gnu.org/licenses/>.
+
+--! @file TB_MULTIPLY_ADDER_TREE_UNIT.vhdl
+--! @author Sammuel Silva
+
 use WORK.MODULES_PACK.all;
 library IEEE;
     use IEEE.std_logic_1164.all;
@@ -26,7 +50,7 @@ architecture BEH of TB_MULTIPLY_ADDER_TREE_UNIT is
     end component DUT;
     for all : DUT use entity WORK.MULTIPLY_ADDER_TREE_UNIT(BEH);
     
-    constant MATRIX_WIDTH           : natural := 4;
+    constant MATRIX_WIDTH           : natural := 3;
 
     signal CLK, RESET               : std_logic;
     signal ENABLE                   : std_logic;
@@ -45,11 +69,13 @@ architecture BEH of TB_MULTIPLY_ADDER_TREE_UNIT is
     signal stop_the_clock   : boolean := false;
     
     signal START            : boolean;
+    signal NEXT_FMAP        : boolean := false;
     signal EVALUATE         : boolean;
     signal QUIT_CLOCK0      : boolean;
 
     -- for data input simulation
-    signal CURRENT_INPUT    : INTEGER_ARRAY_2D_TYPE(0 to MATRIX_WIDTH-1, 0 to MATRIX_WIDTH-1);
+    signal CURRENT_INPUT_0  : INTEGER_ARRAY_2D_TYPE(0 to MATRIX_WIDTH-1, 0 to MATRIX_WIDTH-1);
+    signal CURRENT_INPUT_1  : INTEGER_ARRAY_2D_TYPE(0 to MATRIX_WIDTH-1, 0 to MATRIX_WIDTH-1);
     signal CURRENT_RESULT   : INTEGER_ARRAY_2D_TYPE(0 to MATRIX_WIDTH-1, 0 to MATRIX_WIDTH-1);
     
     
@@ -115,9 +141,8 @@ begin
 
     STIMULUS:
     process is
-        procedure LOAD_KERNEL_PROC(
-            MATRIX : in INTEGER_ARRAY_2D_TYPE
-        ) is
+        procedure INITIALIZE
+        is
         begin
             START               <= false;
             RESET               <= '0';
@@ -130,7 +155,12 @@ begin
             wait until '1'=CLK and CLk'event;
             RESET               <= '0';
             ENABLE              <= '1';
+        end procedure INITIALIZE;
 
+        procedure LOAD_KERNEL_PROC(
+            MATRIX : in INTEGER_ARRAY_2D_TYPE
+        ) is
+        begin
             for row in 0 to MATRIX_WIDTH - 1 loop
                 for col in 0 to MATRIX_WIDTH - 1 loop
                     KERNEL(row * MATRIX_WIDTH + col) <= std_logic_vector(to_unsigned(MATRIX(row, col), BYTE_WIDTH));
@@ -141,32 +171,46 @@ begin
         procedure START_TEST 
         is
         begin
-            START <= true;
+            START               <= true;
             LOAD_NEXT_KERNEL    <= '1';
             wait until '1'=CLK and CLK'event;
+            LOAD_KERNEL_PROC(IN_KERNEL_2);
+            START               <= false;
+            wait until '1'=CLK and CLK'event;
             LOAD_NEXT_KERNEL    <= '0';
-            START       <= false;
-            for i in 0 to 3*MATRIX_WIDTH-1 loop
+            for i in 0 to 6*MATRIX_WIDTH-1 loop
                 wait until '1'=CLK and CLK'event;
             end loop;
         end procedure START_TEST;
     begin
-        QUIT_CLOCK0     <= false;
-        CURRENT_INPUT   <= IN_FMAP_3;
+        QUIT_CLOCK0      <= false;
+        CURRENT_INPUT_0  <= IN_FMAP_1;
+        CURRENT_INPUT_1  <= IN_FMAP_2;
         --CURRENT_RESULT  <= RESULT_MATRIX_S;
-        LOAD_KERNEL_PROC(IN_KERNEL_3);
+        INITIALIZE;
+        LOAD_KERNEL_PROC(IN_KERNEL_1);
         START_TEST;
         QUIT_CLOCK0 <= true;
         wait;
     end process STIMULUS;
 
-    PROCESS_INPUT_FMAP:
+    PROCESS_INPUT_FMAP_0:
     process is
     begin
         wait until START = true;
         for row in 0 to MATRIX_WIDTH - 1 loop
             for col in 0 to MATRIX_WIDTH - 1 loop
-                FMAP_WINDOW(row * MATRIX_WIDTH + col) <= std_logic_vector(to_unsigned(CURRENT_INPUT(row, col), BYTE_WIDTH));
+                FMAP_WINDOW(row * MATRIX_WIDTH + col) <= std_logic_vector(to_unsigned(CURRENT_INPUT_0(row, col), BYTE_WIDTH));
+            end loop;
+        end loop;
+        wait until '1'=CLK and CLK'event;
+        LOAD_KERNEL <= '1';
+        wait until '1'=CLK and CLK'event;
+        LOAD_KERNEL <= '0';
+
+        for row in 0 to MATRIX_WIDTH - 1 loop
+            for col in 0 to MATRIX_WIDTH - 1 loop
+                FMAP_WINDOW(row * MATRIX_WIDTH + col) <= std_logic_vector(to_unsigned(CURRENT_INPUT_1(row, col), BYTE_WIDTH));
             end loop;
         end loop;
         wait until '1'=CLK and CLK'event;

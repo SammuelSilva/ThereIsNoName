@@ -1,3 +1,34 @@
+-- Copyright 2021 Sammuel Silva. All rights reserved.
+--
+-- This project is dual licensed under GNU General Public License version 3
+-- and a commercial license available on request.
+---------------------------------------------------------------------------
+-- For non commercial use only:
+-- This file is part of TINN.
+-- 
+-- TINN is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+-- 
+-- TINN is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with TINN. If not, see <http://www.gnu.org/licenses/>.
+
+--! @file MULTIPLY_ADDER_TREE_UNIT.vhdl
+--! @author Sammuel Silva
+--! @brief Multiply Adder Tree Unit
+
+-- This file contains the definition of the multiply adder tree unit.
+-- The multiply adder tree unit is a unit that takes two inputs: Kernel and a FMAP_WINDOW
+-- and realize a element-wise multiplication of the two inputs and then starts to add
+-- the results of the multiplication, and then the results of the add operation until the root is reached
+ 
+
 use WORK.MODULES_PACK.all;
 library IEEE;
     use IEEE.std_logic_1164.all;
@@ -14,13 +45,13 @@ entity MULTIPLY_ADDER_TREE_UNIT is
         CLK, RESET          : in  std_logic;
         ENABLE              : in  std_logic;
         
-        KERNEL              : in  BYTE_ARRAY_TYPE(0 to MATRIX_WIDTH*MATRIX_WIDTH-1); --!< Input dos pesos, conectados com a entrada de pesos no MACC.
-        FMAP_WINDOW         : in  BYTE_ARRAY_TYPE(0 to MATRIX_WIDTH*MATRIX_WIDTH-1); --!< Os dados de entrada na diagonal.
+        KERNEL              : in  BYTE_ARRAY_TYPE(0 to MATRIX_WIDTH*MATRIX_WIDTH-1); 
+        FMAP_WINDOW         : in  BYTE_ARRAY_TYPE(0 to MATRIX_WIDTH*MATRIX_WIDTH-1); 
         
-        LOAD_NEXT_KERNEL    : in  std_logic; --!< Ativa os pesos carregados de forma sequenciais.
-        LOAD_KERNEL         : in  std_logic; --!< Realiza o pre-carregamento de uma coluna com o WEIGHT_DATA.
+        LOAD_NEXT_KERNEL    : in  std_logic; 
+        LOAD_KERNEL         : in  std_logic; 
         
-        RESULT_DATA         : out WORD_TYPE --!< Resultado da multiplicação das matrizes
+        RESULT_DATA         : out WORD_TYPE 
     );
 end entity MULTIPLY_ADDER_TREE_UNIT;
 
@@ -193,6 +224,8 @@ begin
         end generate ROW_OF_LEAFS;
     end generate LEAFS_ACC_GEN;
     
+    --! If the matrix size is a odd number, then the last multiplication result has to be added to the root value.
+        -- This conection make the last multiplication value the same size of the root value.
     ODD_CONECTION:
     if BIT_ODD_CHECK = 1 generate
         ODD_MSIZE_PIPE_ns(1 to (TREE_DEPTH - 1 + 1)) <= ODD_MSIZE_PIPE_cs(0 to (TREE_DEPTH - 1 + 1) - 1);
@@ -216,7 +249,8 @@ begin
             RESULT          => INTERIM_RESULT(MATRIX_SIZE - 1 - 1)(2*EXTENDED_BYTE_WIDTH + (TREE_DEPTH-1) - 1 downto 0)
         );
     end generate ODD_ROOT;
-
+    
+    -- Obtain the final result
     RESULT_ASSIGNMENT:
     process(INTERIM_RESULT) is
         variable RESULT_DATA_v  : std_logic_vector(2*EXTENDED_BYTE_WIDTH + (TREE_DEPTH-1) - 1 downto 0);
@@ -225,7 +259,7 @@ begin
         RESULT_DATA_v := INTERIM_RESULT(MATRIX_SIZE - 1 - 1)(2*EXTENDED_BYTE_WIDTH + (TREE_DEPTH-1) - 1 downto 0); -- RESULT_DATA_v armazena todos os valores da ultima linha da coluna i, exceto o ultimo bit armazenado
         EXTEND_v := (others => INTERIM_RESULT(MATRIX_SIZE - 1 - 1)(2*EXTENDED_BYTE_WIDTH + (TREE_DEPTH-1)-1)); -- Guarda o valor do ultimo dado (SINAL)
         
-        RESULT_DATA <= EXTEND_v & RESULT_DATA_v; -- Concatena o resultado com o sinal
+        RESULT_DATA <= EXTEND_v & RESULT_DATA_v;
     end process RESULT_ASSIGNMENT;
 
     SEQ_LOG:

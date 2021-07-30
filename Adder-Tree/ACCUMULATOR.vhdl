@@ -1,3 +1,30 @@
+-- Copyright 2021 Sammuel Silva. All rights reserved.
+--
+-- This project is dual licensed under GNU General Public License version 3
+-- and a commercial license available on request.
+---------------------------------------------------------------------------
+-- For non commercial use only:
+-- This file is part of TINN.
+-- 
+-- TINN is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+-- 
+-- TINN is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with TINN. If not, see <http://www.gnu.org/licenses/>.
+
+--! @file ACCUMULATOR.vhdl
+--! @author Sammuel Silva
+--! @brief accumulator
+-- This file contains the definition of the accumulator function.
+-- Prety simple, just a add function.
+
 use WORK.MODULES_PACK.all;
 library IEEE;
     use IEEE.std_logic_1164.all;
@@ -21,19 +48,10 @@ end entity ACCUMULATOR;
 
 architecture BEH of ACCUMULATOR is
 
-    --signal MULV1_ns      : std_logic_vector(PARTIAL_ACC - 1 - 1 downto 0);
-    --signal MULV1_cs      : std_logic_vector(PARTIAL_ACC - 1 - 1 downto 0) := (others => '0');
-
-    --signal MULV2_ns      : std_logic_vector(PARTIAL_ACC - 1 - 1 downto 0);
-    --signal MULV2_cs      : std_logic_vector(PARTIAL_ACC - 1 - 1 downto 0) := (others => '0');
-
     signal RESULT_ns     : std_logic_vector(PARTIAL_ACC - 1 downto 0);
     signal RESULT_cs     : std_logic_vector(PARTIAL_ACC - 1 downto 0) := (others => '0');
 
 begin
-
-    --MULV1_ns     <= MULV1;
-    --MULV2_ns     <= MULV2;
 
     ACC:
     process(MULV1, MULV2) is
@@ -55,14 +73,10 @@ begin
     begin
         if CLK'event and CLK = '1' then
             if RESET = '1' then
-                --MULV2_cs   <= (others => '0');
-                --MULV1_cs   <= (others => '0');
                 RESULT_cs  <= (others => '0');
             else
                 
                 if ENABLE = '1' then
-                    --MULV1_cs    <= MULV1_ns;
-                    --MULV2_cs    <= MULV2_ns;
                     RESULT_cs   <= RESULT_ns;
                 end if;
             end if;
