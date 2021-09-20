@@ -49,15 +49,35 @@ package MODULES_PACK is
     constant DATA_ADDRESS_WIDTH                     : natural := 24;
     constant ACCUMULATOR_ADDRESS_WIDTH              : natural := 16;
     constant KERNEL_ADDRESS_WIDTH                   : natural := DATA_ADDRESS_WIDTH + ACCUMULATOR_ADDRESS_WIDTH;
-    
+    constant LENGTH_WIDTH                           : natural := 32;
+    constant OP_CODE_WIDTH                          : natural := 8;
+    constant INSTRUCTION_WIDTH                      : natural := KERNEL_ADDRESS_WIDTH + LENGTH_WIDTH + OP_CODE_WIDTH;
+
     subtype DATA_ADDRESS_TYPE is std_logic_vector(DATA_ADDRESS_WIDTH-1 downto 0);
     subtype ACCUMULATOR_ADDRESS_TYPE is std_logic_vector(ACCUMULATOR_ADDRESS_WIDTH-1 downto 0);
     subtype KERNEL_ADDRESS_TYPE is std_logic_vector(KERNEL_ADDRESS_WIDTH-1 downto 0);
+    subtype LENGTH_TYPE is std_logic_vector(LENGTH_WIDTH-1 downto 0);
+    subtype OP_CODE_TYPE is std_logic_vector(OP_CODE_WIDTH-1 downto 0);
     
-    
+    type INSTRUCTION_TYPE is record
+        OP_CODE : OP_CODE_TYPE;
+        CALC_LENGTH : LENGTH_TYPE;
+        ACC_ADDRESS : ACCUMULATOR_ADDRESS_TYPE;
+        DATA_ADDRESS : DATA_ADDRESS_TYPE;
+    end record INSTRUCTION_TYPE;
+
+    type KERNEL_INSTRUCTION_TYPE is record
+        OP_CODE             : OP_CODE_TYPE;
+        KERNEL_LENGTH       : LENGTH_TYPE;
+        KERNEL_ADDRESS      : KERNEL_ADDRESS_TYPE;
+    end record KERNEL_INSTRUCTION_TYPE;
+
     -- Function List
     function BITS_TO_BYTE_ARRAY(BITVECTOR : std_logic_vector) return BYTE_ARRAY_TYPE;
     function BYTE_ARRAY_TO_BITS(BYTE_ARRAY : BYTE_ARRAY_TYPE) return std_logic_vector;
+    function TO_KERNEL_INSTRUCTION(INSTRUCTION : INSTRUCTION_TYPE) return KERNEL_INSTRUCTION_TYPE;
+
+
 end package ;
 
 package body MODULES_PACK is
@@ -84,4 +104,13 @@ package body MODULES_PACK is
         return BITVECTOR;
     end function BYTE_ARRAY_TO_BITS;
 
+    function TO_KERNEL_INSTRUCTION(INSTRUCTION : INSTRUCTION_TYPE) return KERNEL_INSTRUCTION_TYPE is
+        variable KERNEL_INSTRUCTION : KERNEL_INSTRUCTION_TYPE;
+    begin
+        KERNEL_INSTRUCTION.OP_CODE := INSTRUCTION.OP_CODE;
+        KERNEL_INSTRUCTION.KERNEL_LENGTH := INSTRUCTION.CALC_LENGTH;
+        KERNEL_INSTRUCTION.KERNEL_ADDRESS := INSTRUCTION.DATA_ADDRESS & INSTRUCTION.ACC_ADDRESS;
+        
+        return KERNEL_INSTRUCTION;
+    end function TO_KERNEL_INSTRUCTION;
 end package body;

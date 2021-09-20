@@ -107,7 +107,7 @@ begin
     R_KERNEL         <= R_KERNEL_REG1_cs;
 
     --! @brief Kernel memory write operation.
-        -- SWITCH(0) equals to '0' means that the memory A will reciver the data coming from the external memory.
+        -- SWITCH(0) equals to '0' means that the memory A will recive the data coming from the external memory.
         -- Else, the memory B will reciver the data coming from the external memory.
         -- The W_KERNEL_EN signal is used to enable the write operation in a memory position.
     WRITE:
